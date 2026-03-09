@@ -1,0 +1,8 @@
+{
+    "name": "resistband-pro",
+    "version": "1.0.0",
+    "description": "ResistBand Pro – Smart Exercise Band Web App + Vercel API",
+    "dependencies": {
+        "@supabase/supabase-js": "^2.38.0"
+    }
+}

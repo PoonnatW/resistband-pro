@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResistBand Pro — Smart Exercise System</title>
+    <meta name="description" content="Smart resistance band exercise system with load cell motor technology">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div id="app">
+
+        <!-- ============================================ -->
+        <!-- PAGE 1: LOGIN (Email & PIN) -->
+        <!-- ============================================ -->
+        <section id="page-login" class="page active">
+            <div class="login-container">
+                <div class="login-logo" id="login-header">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 64 64" fill="none">
+                            <circle cx="32" cy="32" r="28" stroke="url(#logoGrad)" stroke-width="4" />
+                            <path
+                                d="M20 32 C20 22, 28 18, 32 18 C36 18, 44 22, 44 32 C44 42, 36 46, 32 46 C28 46, 20 42, 20 32Z"
+                                fill="url(#logoGrad)" opacity="0.3" />
+                            <path
+                                d="M26 32 C26 26, 29 24, 32 24 C35 24, 38 26, 38 32 C38 38, 35 40, 32 40 C29 40, 26 38, 26 32Z"
+                                fill="url(#logoGrad)" />
+                            <defs>
+                                <linearGradient id="logoGrad" x1="0" y1="0" x2="64" y2="64">
+                                    <stop offset="0%" stop-color="#3B82F6" />
+                                    <stop offset="100%" stop-color="#2563EB" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <h1 class="logo-text">ResistBand <span>Pro</span></h1>
+                    <p class="logo-subtitle">Smart Exercise System</p>
+                </div>
+
+                <!-- Username/Email Entry -->
+                <div id="email-section" class="auth-section active-auth-section">
+                    <p style="color: var(--text-secondary); text-align: center; font-size: 14px; margin-bottom: -10px;">
+                        Enter your email to log in or create an account</p>
+                    <div class="email-input-wrapper">
+                        <svg class="email-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                            <polyline points="22,6 12,13 2,6" />
+                        </svg>
+                        <input type="email" id="email-input" class="modern-input" placeholder="Enter Email"
+                            autocomplete="email">
+                    </div>
+                    <button class="btn-primary" id="btn-next-pin" disabled>Next</button>
+                    <p class="error-text" id="email-error"></p>
+                </div>
+
+                <!-- PIN Entry (Hidden Initially) -->
+                <div id="pin-section" class="auth-section hidden-auth-section">
+                    <div class="user-greeting">
+                        <p>Welcome back,</p>
+                        <h3 id="display-email">user@example.com</h3>
+                        <button class="btn-text-small" id="btn-change-user">Not you?</button>
+                    </div>
+
+                    <div class="pin-display">
+                        <div class="pin-dots">
+                            <span class="pin-dot" id="dot-0"></span>
+                            <span class="pin-dot" id="dot-1"></span>
+                            <span class="pin-dot" id="dot-2"></span>
+                            <span class="pin-dot" id="dot-3"></span>
+                        </div>
+                        <p class="pin-label">Enter your 4-digit PIN</p>
+                    </div>
+
+                    <p class="error-text" id="pin-error"></p>
+
+                    <div class="pin-pad">
+                        <button class="pin-key" data-key="1">1</button>
+                        <button class="pin-key" data-key="2">2</button>
+                        <button class="pin-key" data-key="3">3</button>
+                        <button class="pin-key" data-key="4">4</button>
+                        <button class="pin-key" data-key="5">5</button>
+                        <button class="pin-key" data-key="6">6</button>
+                        <button class="pin-key" data-key="7">7</button>
+                        <button class="pin-key" data-key="8">8</button>
+                        <button class="pin-key" data-key="9">9</button>
+                        <button class="pin-key pin-key-empty"></button>
+                        <button class="pin-key" data-key="0">0</button>
+                        <button class="pin-key pin-key-delete" data-key="delete">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z" />
+                                <line x1="18" y1="9" x2="12" y2="15" />
+                                <line x1="12" y1="9" x2="18" y2="15" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- PAGE 2: DEVICE SELECTION -->
+        <!-- ============================================ -->
+        <section id="page-devices" class="page">
+            <header class="page-header">
+                <button class="btn-back" id="devices-back">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <h2>Connect Device</h2>
+                <div class="header-spacer"></div>
+            </header>
+
+            <div class="devices-content">
+                <div class="scan-animation">
+                    <div class="scan-ring ring-1"></div>
+                    <div class="scan-ring ring-2"></div>
+                    <div class="scan-ring ring-3"></div>
+                    <div class="scan-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M2 12.5C2 7.25 6.25 3 11.5 3M5 12.5c0-3.59 2.91-6.5 6.5-6.5" />
+                            <circle cx="12" cy="12" r="2" fill="currentColor" />
+                            <path d="M22 12.5C22 7.25 17.75 3 12.5 3M19 12.5c0-3.59-2.91-6.5-6.5-6.5" />
+                        </svg>
+                    </div>
+                </div>
+                <p class="scan-label">Scanning for nearby devices...</p>
+
+                <div class="devices-list">
+                    <!-- Device 1: Connected -->
+                    <div class="device-card connected" id="device-1" onclick="selectDevice(this)">
+                        <div class="device-status-dot"></div>
+                        <div class="device-info">
+                            <div class="device-icon">
+                                <svg viewBox="0 0 32 32" fill="none">
+                                    <rect x="4" y="8" width="24" height="16" rx="4" stroke="currentColor"
+                                        stroke-width="2" />
+                                    <path d="M10 14h12M10 18h8" stroke="currentColor" stroke-width="1.5"
+                                        stroke-linecap="round" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3>RB-Pro Unit #1</h3>
+                                <p>Load Cell Motor — Active</p>
+                            </div>
+                        </div>
+                        <span class="device-badge connected">Connected</span>
+                    </div>
+
+                    <!-- Device 2: Not connected -->
+                    <div class="device-card" id="device-2">
+                        <div class="device-status-dot"></div>
+                        <div class="device-info">
+                            <div class="device-icon">
+                                <svg viewBox="0 0 32 32" fill="none">
+                                    <rect x="4" y="8" width="24" height="16" rx="4" stroke="currentColor"
+                                        stroke-width="2" />
+                                    <path d="M10 14h12M10 18h8" stroke="currentColor" stroke-width="1.5"
+                                        stroke-linecap="round" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3>RB-Pro Unit #2</h3>
+                                <p>Load Cell Motor — Idle</p>
+                            </div>
+                        </div>
+                        <span class="device-badge">Not Connected</span>
+                    </div>
+
+                    <!-- Device 3: Not connected -->
+                    <div class="device-card" id="device-3">
+                        <div class="device-status-dot"></div>
+                        <div class="device-info">
+                            <div class="device-icon">
+                                <svg viewBox="0 0 32 32" fill="none">
+                                    <rect x="4" y="8" width="24" height="16" rx="4" stroke="currentColor"
+                                        stroke-width="2" />
+                                    <path d="M10 14h12M10 18h8" stroke="currentColor" stroke-width="1.5"
+                                        stroke-linecap="round" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3>RB-Pro Unit #3</h3>
+                                <p>Load Cell Motor — Idle</p>
+                            </div>
+                        </div>
+                        <span class="device-badge">Not Connected</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- PAGE 3: EXERCISE SELECTION -->
+        <!-- ============================================ -->
+        <section id="page-exercises" class="page">
+            <header class="page-header">
+                <button class="btn-back" id="exercises-back">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <h2>Choose Exercise</h2>
+                <button class="btn-history" id="exercises-history-btn" title="Workout History">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 8v4l3 3" stroke-linecap="round" />
+                        <path d="M3.05 11a9 9 0 1 0 .5-3" stroke-linecap="round" />
+                        <path d="M3 4v4h4" />
+                    </svg>
+                </button>
+                <button class="btn-history" id="btn-logout" title="Logout" style="margin-left:8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </button>
+            </header>
+
+            <div class="exercises-grid">
+                <!-- Bicep Curl -->
+                <div class="exercise-card" onclick="showExerciseDetail('bicep-curl')">
+                    <div class="exercise-img-placeholder" id="img-bicep-curl">
+                        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4">
+                            <rect x="8" y="8" width="48" height="48" rx="8" />
+                            <circle cx="32" cy="26" r="6" />
+                            <path d="M20 44c0-6.63 5.37-12 12-12s12 5.37 12 12" />
+                        </svg>
+                        <span class="img-label">Tap to add image</span>
+                    </div>
+                    <div class="exercise-card-body">
+                        <h3>Bicep Curl</h3>
+                        <p>Upper Arms</p>
+                        <div class="exercise-tags">
+                            <span class="tag">Beginner</span>
+                            <span class="tag">Arms</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Squat -->
+                <div class="exercise-card" onclick="showExerciseDetail('squat')">
+                    <div class="exercise-img-placeholder" id="img-squat">
+                        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4">
+                            <rect x="8" y="8" width="48" height="48" rx="8" />
+                            <circle cx="32" cy="26" r="6" />
+                            <path d="M20 44c0-6.63 5.37-12 12-12s12 5.37 12 12" />
+                        </svg>
+                        <span class="img-label">Tap to add image</span>
+                    </div>
+                    <div class="exercise-card-body">
+                        <h3>Squat</h3>
+                        <p>Lower Body</p>
+                        <div class="exercise-tags">
+                            <span class="tag">Intermediate</span>
+                            <span class="tag">Legs</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chest Press -->
+                <div class="exercise-card" onclick="showExerciseDetail('chest-press')">
+                    <div class="exercise-img-placeholder" id="img-chest-press">
+                        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4">
+                            <rect x="8" y="8" width="48" height="48" rx="8" />
+                            <circle cx="32" cy="26" r="6" />
+                            <path d="M20 44c0-6.63 5.37-12 12-12s12 5.37 12 12" />
+                        </svg>
+                        <span class="img-label">Tap to add image</span>
+                    </div>
+                    <div class="exercise-card-body">
+                        <h3>Chest Press</h3>
+                        <p>Upper Body</p>
+                        <div class="exercise-tags">
+                            <span class="tag">Intermediate</span>
+                            <span class="tag">Chest</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- PAGE 4: EXERCISE DETAIL MODAL -->
+        <!-- ============================================ -->
+        <div id="exercise-modal" class="modal-overlay" onclick="closeModal(event)">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <button class="modal-close" onclick="closeExerciseModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+                <div class="modal-image" id="modal-exercise-image">
+                    <svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3">
+                        <rect x="10" y="10" width="100" height="100" rx="16" />
+                        <circle cx="60" cy="45" r="14" />
+                        <path d="M35 95c0-13.8 11.2-25 25-25s25 11.2 25 25" />
+                    </svg>
+                    <span class="img-label-large">Exercise Image Placeholder</span>
+                </div>
+                <div class="modal-body">
+                    <h2 id="modal-exercise-name">Bicep Curl</h2>
+                    <div class="muscle-groups" id="modal-muscles">
+                        <!-- Filled by JS -->
+                    </div>
+                    <p class="modal-description" id="modal-description">
+                        <!-- Filled by JS -->
+                    </p>
+                    <div class="modal-stats">
+                        <div class="modal-stat">
+                            <span class="stat-value">3</span>
+                            <span class="stat-label">Sets</span>
+                        </div>
+                        <div class="modal-stat">
+                            <span class="stat-value">15</span>
+                            <span class="stat-label">Reps</span>
+                        </div>
+                        <div class="modal-stat">
+                            <span class="stat-value">60s</span>
+                            <span class="stat-label">Rest</span>
+                        </div>
+                    </div>
+
+                    <div class="difficulty-selection" style="margin-bottom: 24px;">
+                        <h4
+                            style="font-size: 13px; color: var(--text-secondary); margin-bottom: 10px; text-transform: uppercase;">
+                            Select Difficulty</h4>
+                        <div class="difficulty-group" style="display: flex; gap: 8px;">
+                            <label class="diff-btn" style="flex:1; cursor:pointer;">
+                                <input type="radio" name="difficulty" value="light" style="display:none;"
+                                    onchange="updateDifficultyUI(this)">
+                                <div class="diff-box"
+                                    style="padding: 12px; text-align:center; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-primary); transition: all 0.2s;">
+                                    Light</div>
+                            </label>
+                            <label class="diff-btn" style="flex:1; cursor:pointer;">
+                                <input type="radio" name="difficulty" value="medium" checked style="display:none;"
+                                    onchange="updateDifficultyUI(this)">
+                                <div class="diff-box"
+                                    style="padding: 12px; text-align:center; border: 2px solid var(--accent-primary); border-radius: 8px; background: var(--accent-light); color: var(--accent-secondary); font-weight: bold; transition: all 0.2s;">
+                                    Medium</div>
+                            </label>
+                            <label class="diff-btn" style="flex:1; cursor:pointer;">
+                                <input type="radio" name="difficulty" value="heavy" style="display:none;"
+                                    onchange="updateDifficultyUI(this)">
+                                <div class="diff-box"
+                                    style="padding: 12px; text-align:center; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-primary); transition: all 0.2s;">
+                                    Heavy</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button class="btn-start-exercise" id="btn-start-ex" onclick="startExercise()">
+                        <span id="btn-start-text" style="display:flex; align-items:center; gap:10px;">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="5,3 19,12 5,21" />
+                            </svg>
+                            Start Exercise
+                        </span>
+                        <span id="btn-start-loading" style="display:none; align-items:center; gap:10px;">
+                            <svg class="spinner" viewBox="0 0 50 50"
+                                style="width:20px; height:20px; animation: rotate 2s linear infinite;">
+                                <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="5"
+                                    stroke-dasharray="90, 150" stroke-linecap="round"
+                                    style="animation: dash 1.5s ease-in-out infinite;"></circle>
+                            </svg>
+                            Adjusting Actuator...
+                        </span>
+                    </button>
+                    <style>
+                        @keyframes rotate {
+                            100% {
+                                transform: rotate(360deg);
+                            }
+                        }
+
+                        @keyframes dash {
+                            0% {
+                                stroke-dasharray: 1, 150;
+                                stroke-dashoffset: 0;
+                            }
+
+                            50% {
+                                stroke-dasharray: 90, 150;
+                                stroke-dashoffset: -35;
+                            }
+
+                            100% {
+                                stroke-dasharray: 90, 150;
+                                stroke-dashoffset: -124;
+                            }
+                        }
+                    </style>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- PAGE 5: WORKOUT IN PROGRESS -->
+        <!-- ============================================ -->
+        <section id="page-workout" class="page">
+            <header class="workout-header">
+                <div class="workout-set-info">
+                    <span class="set-label">SET</span>
+                    <span class="set-number" id="workout-set">1/3</span>
+                </div>
+                <h2 id="workout-exercise-name">Bicep Curl</h2>
+                <button class="btn-quit" onclick="quitWorkout()">Quit</button>
+            </header>
+
+            <!-- Countdown Overlay -->
+            <div id="countdown-overlay" class="countdown-overlay">
+                <div class="countdown-number" id="countdown-number">3</div>
+            </div>
+
+            <!-- Failure Timer Bar -->
+            <div class="failure-timer-bar" id="failure-timer-bar">
+                <div class="failure-bar-track">
+                    <div class="failure-bar-progress" id="failure-progress"></div>
+                </div>
+                <span class="failure-timer-text" id="failure-timer-text">5s</span>
+                <span class="failure-label">until failure</span>
+            </div>
+
+            <div class="workout-body">
+                <div class="rep-counter-ring">
+                    <svg viewBox="0 0 200 200" class="progress-ring">
+                        <circle cx="100" cy="100" r="88" fill="none" stroke="#E2E8F0" stroke-width="8" />
+                        <circle cx="100" cy="100" r="88" fill="none" stroke="url(#repGrad)" stroke-width="8"
+                            stroke-dasharray="553" stroke-dashoffset="553" stroke-linecap="round" id="rep-progress-ring"
+                            transform="rotate(-90 100 100)" />
+                        <defs>
+                            <linearGradient id="repGrad" x1="0" y1="0" x2="200" y2="200">
+                                <stop offset="0%" stop-color="#6C5CE7" />
+                                <stop offset="100%" stop-color="#00CEFF" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="rep-counter-inner">
+                        <span class="rep-count" id="rep-count">0</span>
+                        <span class="rep-total">/ 15</span>
+                    </div>
+                </div>
+
+                <!-- Speed Feedback -->
+                <div class="speed-feedback" id="speed-feedback">
+                    <div class="feedback-icon" id="feedback-icon">⭐</div>
+                    <p class="feedback-text" id="feedback-text">Perfect pace!</p>
+                </div>
+
+                <!-- Simulated Rep Buttons (for demo) -->
+                <div class="demo-controls">
+                    <button class="demo-btn too-fast" onclick="addRep('fast')">🐇 Too Fast</button>
+                    <button class="demo-btn perfect" onclick="addRep('perfect')">⭐ Perfect</button>
+                    <button class="demo-btn too-slow" onclick="addRep('slow')">🐢 Too Slow</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- PAGE 6: REST BETWEEN SETS -->
+        <!-- ============================================ -->
+        <section id="page-rest" class="page">
+            <div class="rest-content">
+                <h2 class="rest-title">Rest Time</h2>
+                <p class="rest-subtitle">Next set starting soon</p>
+
+                <div class="rest-timer-ring">
+                    <svg viewBox="0 0 240 240" class="rest-ring-svg">
+                        <circle cx="120" cy="120" r="105" fill="none" stroke="#E2E8F0" stroke-width="6" />
+                        <circle cx="120" cy="120" r="105" fill="none" stroke="url(#restGrad)" stroke-width="6"
+                            stroke-dasharray="660" stroke-dashoffset="0" stroke-linecap="round" id="rest-progress-ring"
+                            transform="rotate(-90 120 120)" />
+                        <defs>
+                            <linearGradient id="restGrad" x1="0" y1="0" x2="240" y2="240">
+                                <stop offset="0%" stop-color="#3B82F6" />
+                                <stop offset="100%" stop-color="#2563EB" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="rest-timer-inner">
+                        <span class="rest-time" id="rest-time">1:00</span>
+                    </div>
+                </div>
+
+                <div class="rest-set-preview">
+                    <span>Up Next</span>
+                    <h3 id="rest-next-set">Set 2/3</h3>
+                </div>
+
+                <button class="btn-skip-rest" onclick="skipRest()">Skip Rest →</button>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- PAGE 7: WORKOUT SUMMARY -->
+        <!-- ============================================ -->
+        <section id="page-summary" class="page">
+            <div class="summary-content">
+                <div class="summary-header-section">
+                    <div class="summary-trophy">🏆</div>
+                    <h2>Workout Complete!</h2>
+                    <p class="summary-exercise-name" id="summary-exercise-name">Bicep Curl</p>
+                </div>
+
+                <!-- Overall Stats -->
+                <div class="summary-overall">
+                    <div class="summary-stat-card highlight">
+                        <span class="summary-stat-value" id="summary-total-reps">45</span>
+                        <span class="summary-stat-label">Total Reps</span>
+                    </div>
+                    <div class="summary-stat-card">
+                        <span class="summary-stat-value" id="summary-perfect">
+                            <span class="mini-icon">⭐</span> 30
+                        </span>
+                        <span class="summary-stat-label">Perfect</span>
+                    </div>
+                    <div class="summary-stat-card">
+                        <span class="summary-stat-value" id="summary-fast">
+                            <span class="mini-icon">🐇</span> 10
+                        </span>
+                        <span class="summary-stat-label">Too Fast</span>
+                    </div>
+                    <div class="summary-stat-card">
+                        <span class="summary-stat-value" id="summary-slow">
+                            <span class="mini-icon">🐢</span> 5
+                        </span>
+                        <span class="summary-stat-label">Too Slow</span>
+                    </div>
+                </div>
+
+                <!-- Per-Set Breakdown -->
+                <div class="summary-sets-breakdown">
+                    <h3>Set Breakdown</h3>
+                    <div class="set-breakdown-list" id="set-breakdown-list">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+
+                <!-- Score Ring -->
+                <div class="score-section">
+                    <div class="score-ring-container">
+                        <svg viewBox="0 0 160 160" class="score-ring-svg">
+                            <circle cx="80" cy="80" r="70" fill="none" stroke="#E2E8F0" stroke-width="8" />
+                            <circle cx="80" cy="80" r="70" fill="none" stroke="url(#scoreGrad)" stroke-width="8"
+                                stroke-dasharray="440" stroke-dashoffset="148" stroke-linecap="round"
+                                transform="rotate(-90 80 80)" id="score-ring" />
+                            <defs>
+                                <linearGradient id="scoreGrad" x1="0" y1="0" x2="160" y2="160">
+                                    <stop offset="0%" stop-color="#3B82F6" />
+                                    <stop offset="100%" stop-color="#2563EB" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <div class="score-inner">
+                            <span class="score-value" id="score-value">67%</span>
+                            <span class="score-label">Accuracy</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-done" onclick="goHome()">
+                    Done
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- PAGE 8: WORKOUT HISTORY (SESSION LIST)       -->
+        <!-- ============================================ -->
+        <section id="page-history" class="page">
+            <header class="page-header">
+                <button class="btn-back" id="history-back">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <h2>Workout History</h2>
+                <div class="header-spacer"></div>
+            </header>
+            <div class="history-content">
+                <div class="history-sessions-list" id="history-sessions-list">
+                    <!-- Filled by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- PAGE 9: SESSION DETAIL (REP BREAKDOWN)       -->
+        <!-- ============================================ -->
+        <section id="page-session-detail" class="page">
+            <header class="page-header">
+                <button class="btn-back" id="session-detail-back">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <h2 id="session-detail-title">Session Detail</h2>
+                <div class="header-spacer"></div>
+            </header>
+            <div class="session-detail-content">
+                <div class="session-summary-bar" id="session-summary-bar">
+                    <!-- Filled by JS -->
+                </div>
+
+                <div class="session-chart-container"
+                    style="margin-top:20px; margin-bottom: 20px; background: white; padding-bottom: 25px; padding-top: 10px; padding-left: 10px; padding-right: 10px; border-radius: 16px; border: 1px solid var(--border-color); height: 260px; overflow: hidden;">
+                    <h3 style="font-size: 14px; margin-bottom: 10px; color: var(--text-secondary);">Force Over Time (Set
+                        <span id="chart-set-label">1</span>)
+                    </h3>
+                    <canvas id="session-force-chart" width="400" height="200"></canvas>
+                    <div style="display:flex; justify-content:center; gap: 8px; margin-top: 10px;"
+                        id="chart-set-toggles">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+
+                <div class="session-reps-list" id="session-reps-list">
+                    <!-- Filled by JS -->
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script src="workout_history_data.js"></script>
+    <script src="app.js"></script>
+
+</body>
+
+</html>
