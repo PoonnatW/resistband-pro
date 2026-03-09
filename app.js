@@ -29,8 +29,7 @@ const FAILURE_SHOW_AT = 3;
 let workoutActive = false;
 
 // ---- Vercel Server Config ----
-// TODO: Replace with your actual Vercel project URL after deploying
-const VERCEL_URL = 'https://YOUR-PROJECT.vercel.app';
+const VERCEL_URL = 'https://resistband-pro.vercel.app/';
 let repPollInterval = null;
 let lastRepPollTime = 0;
 
