@@ -49,7 +49,6 @@ module.exports = async function handler(req, res) {
             .from('device_rep_queue')
             .select('*')
             .eq('consumed', false)
-            .gt('created_at', sinceIso)
             .order('created_at', { ascending: true });
 
         if (error) return res.status(500).json({ error: error.message });
