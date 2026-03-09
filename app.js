@@ -65,7 +65,7 @@ const exercises = {
   },
   'chest-press': {
     name: 'Chest Press',
-    image: 'assets/cable-standing-chest-press.webp',
+    image: 'assets/chest-press.webp',
     muscles: ['Pectorals', 'Triceps', 'Anterior Deltoids'],
     description: 'The chest press primarily targets the pectoral muscles while also engaging the triceps and front deltoids. The motorized resistance adapts in real-time to your strength curve for optimal chest development.'
   }
