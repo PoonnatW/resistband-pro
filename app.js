@@ -29,9 +29,15 @@ const FAILURE_SHOW_AT = 3;
 let workoutActive = false;
 
 // ---- Vercel Server Config ----
-const VERCEL_URL = 'https://resistband-pro.vercel.app/';
+const VERCEL_URL = 'https://resistband-pro.vercel.app'; // no trailing slash
 let repPollInterval = null;
 let lastRepPollTime = 0;
+
+// Safe URL builder — same logic as apiUrl() in the .ino
+function vercelApi(path) {
+  const base = VERCEL_URL.replace(/\/$/, ''); // strip any accidental trailing slash
+  return base + path; // path must start with /
+}
 
 // ---- Difficulty → Band Length (cm) ----
 const DIFFICULTY_CM = { light: 12, medium: 8, heavy: 4 };
@@ -430,27 +436,38 @@ async function startExercise() {
   document.getElementById('btn-start-ex').disabled = true;
 
   // ── 1. Send set_length command to ESP32 via Vercel ──────────────────────
+  const commandSentAt = Date.now(); // used below to reject stale 'ready' timestamps
   let deviceAvailable = false;
   try {
-    const cmdRes = await fetch(`${VERCEL_URL}/api/command`, {
+    const cmdRes = await fetch(vercelApi('/api/command'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: 'set_length', cm: bandCm })
     });
     deviceAvailable = cmdRes.ok;
+    console.log('[APP] set_length command sent, cm=', bandCm, 'ok=', deviceAvailable);
   } catch (err) {
     console.warn('Could not reach Vercel — proceeding without hardware:', err);
   }
 
-  // ── 2. Poll /api/status until device reports "ready" (max 30 s) ─────────
+  // ── 2. Poll /api/status until device reports a FRESH "ready" ─────────────
+  //    Wait 1.5 s first so the ESP32 finishes its current 1-second poll cycle
+  //    and changes status to "moving", then only accept "ready" with a
+  //    last_seen_at timestamp newer than when we sent the command.
   if (deviceAvailable) {
+    await new Promise(r => setTimeout(r, 1500)); // give ESP32 time to read command
     let ready = false;
-    for (let i = 0; i < 60; i++) {  // 60 × 500 ms = 30 s max
+    for (let i = 0; i < 60; i++) {  // max 30 s
       await new Promise(r => setTimeout(r, 500));
       try {
-        const st = await fetch(`${VERCEL_URL}/api/status`);
+        const st = await fetch(vercelApi('/api/status'));
         const json = await st.json();
-        if (json.status === 'ready') { ready = true; break; }
+        const lastSeenMs = new Date(json.last_seen_at).getTime();
+        console.log('[APP] status=', json.status, 'lastSeen=', json.last_seen_at);
+        if (json.status === 'ready' && lastSeenMs > commandSentAt) {
+          ready = true;
+          break;
+        }
       } catch (_) { /* ignore transient network errors */ }
     }
     if (!ready) console.warn('Device did not report ready in time — proceeding anyway');
@@ -636,7 +653,7 @@ async function startRepPolling() {
 
   // Tell ESP32 to enter rep-detection mode
   try {
-    await fetch(`${VERCEL_URL}/api/command`, {
+    await fetch(vercelApi('/api/command'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: 'start_workout' })
@@ -646,10 +663,11 @@ async function startRepPolling() {
   repPollInterval = setInterval(async () => {
     if (!workoutActive) return;
     try {
-      const res = await fetch(`${VERCEL_URL}/api/rep?since=${lastRepPollTime}`);
+      const res = await fetch(vercelApi(`/api/rep?since=${lastRepPollTime}`));
       const data = await res.json();
       if (data.reps && data.reps.length > 0) {
         lastRepPollTime = Date.now();
+        console.log('[APP] Received reps:', data.reps.length, data.reps.map(r => r.quality));
         data.reps.forEach(rep => addRep(rep.quality, rep.force_data));
       }
     } catch (e) { /* ignore transient errors */ }
@@ -660,7 +678,7 @@ async function stopRepPolling() {
   clearInterval(repPollInterval);
   repPollInterval = null;
   try {
-    await fetch(`${VERCEL_URL}/api/command`, {
+    await fetch(vercelApi('/api/command'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: 'end_workout' })
