@@ -22,11 +22,12 @@ let restTimer = null;
 let restSeconds = 60;
 let countdownTimer = null;
 let failureTimer = null;
-let failureCountdown = 12;
+let failureCountdown = 9;
 let failureTickTimer = null;
-const FAILURE_TOTAL = 12;
+const FAILURE_TOTAL = 9;
 const FAILURE_SHOW_AT = 3;
 let workoutActive = false;
+let activeTickAudio = null;
 
 // ---- Vercel Server Config ----
 const VERCEL_URL = 'https://resistband-pro.vercel.app'; // no trailing slash
@@ -87,10 +88,11 @@ class AudioManager {
 
   // Plays a sound. Clones the node to allow overlapping playback
   play(name) {
-    if (this.isMuted || !this.sounds[name]) return;
+    if (this.isMuted || !this.sounds[name]) return null;
     const soundClone = this.sounds[name].cloneNode();
     soundClone.volume = this.sounds[name].volume;
     soundClone.play().catch(err => console.warn(`Audio blocked for ${name}:`, err));
+    return soundClone;
   }
 
   toggleMute() {
@@ -455,7 +457,7 @@ async function startExercise() {
   //    and changes status to "moving", then only accept "ready" with a
   //    last_seen_at timestamp newer than when we sent the command.
   if (deviceAvailable) {
-    await new Promise(r => setTimeout(r, 2000)); // give ESP32 time to read command
+    await new Promise(r => setTimeout(r, 3000)); // give ESP32 time to read command
     let ready = false;
     for (let i = 0; i < 60; i++) {  // max 30 s
       await new Promise(r => setTimeout(r, 500));
@@ -568,7 +570,11 @@ function startFailureTimer() {
     if (failureCountdown <= FAILURE_SHOW_AT) {
       // On first reveal, show bar and kick off smooth CSS transition
       if (failureCountdown === FAILURE_SHOW_AT) {
-        sfx.play('timer_tick');
+        if (activeTickAudio) {
+          activeTickAudio.pause();
+          activeTickAudio.currentTime = 0;
+        }
+        activeTickAudio = sfx.play('timer_tick');
         bar.classList.add('visible');
         // Force reflow so 100% width is painted before animating to 0
         void progressBar.offsetWidth;
@@ -603,6 +609,12 @@ function clearFailureTimer() {
   clearInterval(failureTickTimer);
   failureTickTimer = null;
   document.getElementById('failure-timer-bar').classList.remove('visible');
+
+  if (activeTickAudio) {
+    activeTickAudio.pause();
+    activeTickAudio.currentTime = 0;
+    activeTickAudio = null;
+  }
 }
 
 // updateFailureDisplay logic is now inside startFailureTimer
@@ -1356,4 +1368,3 @@ document.getElementById('session-detail-back').addEventListener('click', () => {
 
 // ---- Load history data on startup ----
 // We no longer load it on startup, only when navigating to page explicitly via renderHistoryPage();
-
