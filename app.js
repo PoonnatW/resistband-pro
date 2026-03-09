@@ -22,9 +22,9 @@ let restTimer = null;
 let restSeconds = 60;
 let countdownTimer = null;
 let failureTimer = null;
-let failureCountdown = 7;
+let failureCountdown = 9;
 let failureTickTimer = null;
-const FAILURE_TOTAL = 7;
+const FAILURE_TOTAL = 9;
 const FAILURE_SHOW_AT = 3;
 let workoutActive = false;
 
