@@ -680,7 +680,7 @@ async function startRepPolling() {
       if (data.reps && data.reps.length > 0) {
         lastRepPollTime = Date.now();
         console.log('[APP] Received reps:', data.reps.length, data.reps.map(r => r.quality));
-        data.reps.forEach(rep => addRep(rep.quality, rep.force_data));
+        data.reps.forEach(rep => addRep(rep.quality, rep.duration_ms, rep.force_data));
       }
     } catch (e) { /* ignore transient errors */ }
   }, 600);
@@ -699,7 +699,7 @@ async function stopRepPolling() {
 }
 
 // ---- Rep Tracking ----
-function addRep(speed, realForceData = null) {
+function addRep(speed, realDuration = null, realForceData = null) {
   if (!workoutActive || currentRep >= TOTAL_REPS) return;
 
   currentRep++;
@@ -719,8 +719,8 @@ function addRep(speed, realForceData = null) {
     sfx.play('rep_slow');
   }
 
-  // Use real force data from ESP32, or fall back to sinusoidal mock if offline
-  const duration = speed === 'fast' ? 1.84 : (speed === 'slow' ? 1.9 : 1.86);
+  // Use real duration if provided, otherwise mock fallback
+  const duration = realDuration ? parseFloat((realDuration / 1000).toFixed(2)) : (speed === 'fast' ? 1.84 : (speed === 'slow' ? 1.9 : 1.86));
 
   let forceData = realForceData;
   if (!forceData || forceData.length === 0) {
@@ -1236,6 +1236,40 @@ async function openSessionDetail(sessionId) {
         toggleContainer.children[0].style.color = 'white';
       }
     }, 50);
+
+    // Add Swipe Support
+    const chartContainer = document.querySelector('.session-chart-container');
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    chartContainer.ontouchstart = e => {
+      touchStartX = e.changedTouches[0].screenX;
+    };
+
+    chartContainer.ontouchend = e => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    };
+
+    function handleSwipe() {
+      const swipedLeft = touchEndX < (touchStartX - 50);
+      const swipedRight = touchEndX > (touchStartX + 50);
+
+      const currentLabel = parseInt(document.getElementById('chart-set-label').textContent, 10);
+      const currentIndex = availableSets.indexOf(currentLabel);
+
+      if (swipedLeft && currentIndex < availableSets.length - 1) {
+        // Next Set
+        const nextSet = availableSets[currentIndex + 1];
+        const nextBtn = toggleContainer.children[currentIndex + 1];
+        drawSessionChart(session.reps, nextSet, nextBtn);
+      } else if (swipedRight && currentIndex > 0) {
+        // Prev Set
+        const prevSet = availableSets[currentIndex - 1];
+        const prevBtn = toggleContainer.children[currentIndex - 1];
+        drawSessionChart(session.reps, prevSet, prevBtn);
+      }
+    }
   }
 
   // Rep list
@@ -1293,12 +1327,19 @@ function drawSessionChart(allReps, setNumber, btnElement = null) {
 
   setReps.forEach(rep => {
     if (rep.force_data) {
-      rep.force_data.forEach((forceVal, idx) => {
+      // For each rep, the duration is divided across the number of force samples
+      const durationMsTotal = (rep.duration || 1.85) * 1000;
+      const msPerSample = durationMsTotal / rep.force_data.length;
+
+      rep.force_data.forEach((forceVal) => {
         compiledData.push(forceVal);
         labels.push((cumulativeTimeMs / 1000).toFixed(1) + 's');
-        cumulativeTimeMs += 50;
+        cumulativeTimeMs += msPerSample;
       });
-      // Minor gap between reps practically isn't needed here if the data forms waves, but could be padded.
+      // Add a visual gap between reps
+      compiledData.push(null);
+      labels.push('');
+      cumulativeTimeMs += 500; // half second gap on the graph
     }
   });
 
@@ -1339,10 +1380,15 @@ function drawSessionChart(allReps, setNumber, btnElement = null) {
       maintainAspectRatio: false,
       scales: {
         x: {
-          ticks: { maxTicksLimit: 10 }
+          ticks: {
+            maxTicksLimit: 8,
+            maxRotation: 0
+          },
+          grid: { display: false }
         },
         y: {
-          beginAtZero: true
+          beginAtZero: true,
+          suggestedMax: 3000
         }
       },
       plugins: {
@@ -1368,3 +1414,4 @@ document.getElementById('session-detail-back').addEventListener('click', () => {
 
 // ---- Load history data on startup ----
 // We no longer load it on startup, only when navigating to page explicitly via renderHistoryPage();
+
