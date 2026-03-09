@@ -679,8 +679,25 @@ async function startRepPolling() {
       const data = await res.json();
       if (data.reps && data.reps.length > 0) {
         lastRepPollTime = Date.now();
-        console.log('[APP] Received reps:', data.reps.length, data.reps.map(r => r.quality));
-        data.reps.forEach(rep => addRep(rep.quality, rep.duration_ms, rep.force_data));
+
+        // Prevent Vercel/Supabase race conditions (duplicate rows) by hashing the physical array
+        const uniqueReps = [];
+        data.reps.forEach(rep => {
+          const repHash = `${rep.quality}_${rep.duration_ms}_${rep.force_data ? rep.force_data.length : 0}`;
+          if (!window._seenReps) window._seenReps = new Set();
+
+          if (!window._seenReps.has(repHash)) {
+            window._seenReps.add(repHash);
+            uniqueReps.push(rep);
+            // keep set small
+            if (window._seenReps.size > 50) window._seenReps.clear();
+          }
+        });
+
+        if (uniqueReps.length > 0) {
+          console.log('[APP] New unique reps parsed:', uniqueReps.length);
+          uniqueReps.forEach(rep => addRep(rep.quality, rep.duration_ms, rep.force_data));
+        }
       }
     } catch (e) { /* ignore transient errors */ }
   }, 600);
@@ -1336,10 +1353,9 @@ function drawSessionChart(allReps, setNumber, btnElement = null) {
         labels.push((cumulativeTimeMs / 1000).toFixed(1) + 's');
         cumulativeTimeMs += msPerSample;
       });
-      // Add a visual gap between reps
-      compiledData.push(null);
-      labels.push('');
-      cumulativeTimeMs += 500; // half second gap on the graph
+      // Do NOT push null here. By leaving it contiguous, Chart.js will draw a straight line
+      // connecting the end of one rep to the start of the next, smoothing over the gap.
+      cumulativeTimeMs += 500; // half second logical gap on the graph axis
     }
   });
 
