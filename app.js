@@ -53,16 +53,19 @@ let workoutStartTime = null;
 const exercises = {
   'bicep-curl': {
     name: 'Bicep Curl',
+    image: 'assets/bicep-curls.webp',
     muscles: ['Biceps', 'Brachialis', 'Forearms'],
     description: 'The bicep curl targets the upper arm muscles, primarily the biceps brachii. Using the resistance band with load cell motor provides consistent tension throughout the full range of motion, maximizing muscle engagement and promoting hypertrophy.'
   },
-  'squat': {
-    name: 'Squat',
-    muscles: ['Quadriceps', 'Glutes', 'Hamstrings', 'Core'],
-    description: 'The squat is a compound exercise targeting the entire lower body. The smart resistance band system provides adaptive resistance, ensuring proper form and progressive overload through load cell feedback.'
+  'external-rotation': {
+    name: 'External Rotation',
+    image: 'assets/external-rotation.jpg',
+    muscles: ['Teres Major', 'Supraspinatus', 'Subscapularis', 'Teres Minor'],
+    description: 'The external rotation is a primary exercise for shoulder health and stability. It targets the rotator cuff muscles, which are essential for proper shoulder function. Using the resistance band with load cell motor provides consistent tension throughout the full range of motion, maximizing muscle engagement and promoting hypertrophy.'
   },
   'chest-press': {
     name: 'Chest Press',
+    image: 'assets/cable-standing-chest-press.webp',
     muscles: ['Pectorals', 'Triceps', 'Anterior Deltoids'],
     description: 'The chest press primarily targets the pectoral muscles while also engaging the triceps and front deltoids. The motorized resistance adapts in real-time to your strength curve for optimal chest development.'
   }
