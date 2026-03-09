@@ -671,7 +671,7 @@ async function startRepPolling() {
         data.reps.forEach(rep => addRep(rep.quality, rep.force_data));
       }
     } catch (e) { /* ignore transient errors */ }
-  }, 300);
+  }, 1000);
 }
 
 async function stopRepPolling() {
