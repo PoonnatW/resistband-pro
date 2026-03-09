@@ -1337,8 +1337,8 @@ function drawSessionChart(allReps, setNumber, btnElement = null) {
         cumulativeTimeMs += msPerSample;
       });
       // Add a visual gap between reps
-      compiledData.push(null);
-      labels.push('');
+      // compiledData.push(null);
+      // labels.push('');
       cumulativeTimeMs += 500; // half second gap on the graph
     }
   });
