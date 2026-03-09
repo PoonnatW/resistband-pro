@@ -22,9 +22,9 @@ let restTimer = null;
 let restSeconds = 60;
 let countdownTimer = null;
 let failureTimer = null;
-let failureCountdown = 9;
+let failureCountdown = 12;
 let failureTickTimer = null;
-const FAILURE_TOTAL = 9;
+const FAILURE_TOTAL = 12;
 const FAILURE_SHOW_AT = 3;
 let workoutActive = false;
 
@@ -671,7 +671,7 @@ async function startRepPolling() {
         data.reps.forEach(rep => addRep(rep.quality, rep.force_data));
       }
     } catch (e) { /* ignore transient errors */ }
-  }, 1000);
+  }, 600);
 }
 
 async function stopRepPolling() {
