@@ -455,7 +455,7 @@ async function startExercise() {
   //    and changes status to "moving", then only accept "ready" with a
   //    last_seen_at timestamp newer than when we sent the command.
   if (deviceAvailable) {
-    await new Promise(r => setTimeout(r, 1500)); // give ESP32 time to read command
+    await new Promise(r => setTimeout(r, 2000)); // give ESP32 time to read command
     let ready = false;
     for (let i = 0; i < 60; i++) {  // max 30 s
       await new Promise(r => setTimeout(r, 500));
