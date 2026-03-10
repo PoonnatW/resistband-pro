@@ -22,9 +22,9 @@ let restTimer = null;
 let restSeconds = 60;
 let countdownTimer = null;
 let failureTimer = null;
-let failureCountdown = 12;
+let failureCountdown = 15;
 let failureTickTimer = null;
-const FAILURE_TOTAL = 12;
+const FAILURE_TOTAL = 15;
 const FAILURE_SHOW_AT = 3;
 let workoutActive = false;
 let activeTickAudio = null;
@@ -460,7 +460,7 @@ async function startExercise() {
   //    and changes status to "moving", then only accept "ready" with a
   //    last_seen_at timestamp newer than when we sent the command.
   if (deviceAvailable) {
-    await new Promise(r => setTimeout(r, 3000)); // give ESP32 time to read command
+    await new Promise(r => setTimeout(r, 4000)); // give ESP32 time to read command
     let ready = false;
     for (let i = 0; i < 60; i++) {  // max 30 s
       await new Promise(r => setTimeout(r, 500));
